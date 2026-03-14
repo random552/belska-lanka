@@ -246,14 +246,11 @@
       </div>
       <div class="map-row">
         <div>
-          <div class="map-label">Mapa</div>
-          <select id="mapSelect">
-            <option>Carentan</option><option>Burgundy</option><option>Leningrad</option>
-            <option>Matmata</option><option>Toujane</option><option>Decoy</option>
-            <option>Breakout</option><option>Railyard</option><option>Brecourt</option>
-            <option>St. Mere</option><option>El Alamein</option><option>Bocage</option>
-            <option>Dawnville</option><option>Vlastni</option>
-          </select>
+          <div class="map-label" style="display:flex;justify-content:space-between;align-items:center;">
+            Mapa
+            <button onclick="showMapEditor()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:10px;font-family:'Orbitron',monospace;letter-spacing:2px;padding:0;transition:color 0.2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color=''">✏ UPRAVIT</button>
+          </div>
+          <select id="mapSelect"></select>
         </div>
         <div class="score-input-wrap">
           <div class="map-label">Skore T1</div>
@@ -295,7 +292,23 @@
       <div class="io-row">
         <button class="btn btn-danger" onclick="closeTournament()">UZAVRIT TURNAJ</button>
         <button class="btn btn-ghost" onclick="exportData()">&#8593; EXPORT JSON</button>
+        <button class="btn btn-danger" onclick="deleteTournament()" style="margin-left:auto">&#128465; SMAZAT TURNAJ</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="mapEditorOverlay" style="display:none;position:fixed;inset:0;background:rgba(5,8,16,0.92);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--accent);border-radius:10px;padding:28px 24px;width:min(420px,92vw);box-shadow:var(--glow);animation:slideIn 0.3s ease-out;">
+    <div style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:4px;color:var(--accent);margin-bottom:16px;">UPRAVIT MAPY</div>
+    <div id="mapEditorList" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input type="text" id="newMapInput" placeholder="Nazev nove mapy" style="flex:1">
+      <button class="btn btn-primary" onclick="addCustomMap()" style="white-space:nowrap;padding:10px 16px;">+ PRIDAT</button>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="saveMapList()" style="flex:1">ULOZIT</button>
+      <button class="btn btn-ghost" onclick="closeMapEditor()" style="flex:1">ZRUSIT</button>
     </div>
   </div>
 </div>
@@ -471,6 +484,61 @@ function renderTournament(t) {
   renderMapKings(t);
 }
 
+// ── MAPS ──────────────────────────────────────────────────────────
+const DEFAULT_MAPS = ['Carentan','Burgundy','Leningrad','Matmata','Toujane','Decoy','Breakout','Railyard','Brecourt','St. Mere','El Alamein','Bocage','Dawnville'];
+let currentMaps = [...DEFAULT_MAPS];
+
+onValue(ref(db, 'maps'), (snap) => {
+  const data = snap.val();
+  currentMaps = (data && Array.isArray(data)) ? data : [...DEFAULT_MAPS];
+  refreshMapSelect();
+});
+
+function refreshMapSelect() {
+  const sel = document.getElementById('mapSelect');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = currentMaps.map(m => `<option>${m}</option>`).join('');
+  if (currentMaps.includes(prev)) sel.value = prev;
+}
+
+window.showMapEditor = () => {
+  if (!isEditor) { showToast('POUZE NAHLIZENNI'); return; }
+  renderMapEditorList();
+  document.getElementById('mapEditorOverlay').style.display = 'flex';
+};
+window.closeMapEditor = () => {
+  document.getElementById('mapEditorOverlay').style.display = 'none';
+};
+function renderMapEditorList() {
+  document.getElementById('mapEditorList').innerHTML = currentMaps.map((m,i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px 12px;">
+      <span style="flex:1;font-size:14px;font-weight:600;letter-spacing:1px">${m}</span>
+      <button onclick="removeMap(${i})" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:16px;padding:2px 4px;transition:color 0.2s;" onmouseover="this.style.color='#ff3c5f'" onmouseout="this.style.color=''">✕</button>
+    </div>`).join('');
+}
+window.addCustomMap = () => {
+  const input = document.getElementById('newMapInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (currentMaps.includes(name)) { showToast('MAPA UZ EXISTUJE'); return; }
+  currentMaps.push(name);
+  input.value = '';
+  renderMapEditorList();
+};
+window.removeMap = (i) => {
+  currentMaps.splice(i,1);
+  renderMapEditorList();
+};
+window.saveMapList = async () => {
+  await set(ref(db, 'maps'), currentMaps);
+  window.closeMapEditor();
+  showToast('MAPY ULOZENY');
+};
+document.getElementById('mapEditorOverlay').addEventListener('click', function(e) {
+  if (e.target === this) window.closeMapEditor();
+});
+
 function populateSelects(t) {
   const teams = t.teams || [];
   ['team1Select','team2Select'].forEach((id, idx) => {
@@ -478,6 +546,7 @@ function populateSelects(t) {
     sel.innerHTML = teams.map((name,i) => `<option value="${i}">${name}</option>`).join('');
     sel.value = idx === 0 ? 0 : 1;
   });
+  refreshMapSelect();
 }
 
 // ── SUBMIT MAP ────────────────────────────────────────────────────
@@ -537,6 +606,17 @@ window.closeTournament = async () => {
   if (!confirm('Opravdu uzavrit turnaj? Nelze znovu otevrit.')) return;
   await update(ref(db, `tournaments/${currentId}`), { active: false });
   showToast('TURNAJ UZAVREN');
+};
+
+// ── DELETE TOURNAMENT ─────────────────────────────────────────────
+window.deleteTournament = async () => {
+  if (!isEditor) return;
+  const t = allTournaments[currentId];
+  const name = t?.name || currentId;
+  if (!confirm(`Opravdu TRVALE SMAZAT turnaj "${name}"?\nVsechna data budou ztracena.`)) return;
+  await remove(ref(db, `tournaments/${currentId}`));
+  showToast('TURNAJ SMAZAN');
+  window.goBack();
 };
 
 // ── EXPORT ────────────────────────────────────────────────────────
