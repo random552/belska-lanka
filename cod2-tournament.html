@@ -226,7 +226,7 @@
     <div class="section">
       <div class="section-title">Prubezne poradi</div>
       <table class="standings-table">
-        <thead><tr><th>#</th><th>Tym</th><th>Z</th><th>V</th><th>P</th><th>Mapy V</th><th>Mapy P</th><th>Diff</th></tr></thead>
+        <thead><tr><th>#</th><th>Tym</th><th>Z</th><th>V</th><th>P</th><th>Body</th></tr></thead>
         <tbody id="standingsBody"></tbody>
       </table>
     </div>
@@ -485,7 +485,7 @@ function renderTournament(t) {
 }
 
 // ── MAPS ──────────────────────────────────────────────────────────
-const DEFAULT_MAPS = ['Carentan','Burgundy','Leningrad','Matmata','Toujane','Decoy','Breakout','Railyard','Brecourt','St. Mere','El Alamein','Bocage','Dawnville'];
+const DEFAULT_MAPS = ['Carentan','Burgundy','Leningrad','Matmata','Toujane','Decoy','Breakout','Railyard','Caen','St. Mere','El Alamein','Bocage','Dawnville'];
 let currentMaps = [...DEFAULT_MAPS];
 
 onValue(ref(db, 'maps'), (snap) => {
@@ -640,29 +640,26 @@ function getMatches(t) {
 
 function calcStandings(t) {
   const teams = t.teams||[];
-  const stats = teams.map((name,i) => ({name, idx:i, played:0, wins:0, losses:0, mapWins:0, mapLosses:0}));
+  const stats = teams.map((name,i) => ({name, idx:i, played:0, wins:0, losses:0, points:0}));
   for (const m of getMatches(t)) {
     const s1=stats[m.team1], s2=stats[m.team2];
     if (!s1||!s2) continue;
     s1.played++; s2.played++;
-    if (m.score1>m.score2) { s1.wins++; s2.losses++; s1.mapWins++; s2.mapLosses++; }
-    else { s2.wins++; s1.losses++; s2.mapWins++; s1.mapLosses++; }
+    if (m.score1>m.score2) { s1.wins++; s2.losses++; s1.points++; }
+    else { s2.wins++; s1.losses++; s2.points++; }
   }
-  return stats.sort((a,b) => b.wins!==a.wins ? b.wins-a.wins : (b.mapWins-b.mapLosses)-(a.mapWins-a.mapLosses));
+  return stats.sort((a,b) => b.points - a.points);
 }
 
 function renderStandings(t) {
   document.getElementById('standingsBody').innerHTML = calcStandings(t).map((s,rank) => {
-    const diff = s.mapWins-s.mapLosses;
     return `<tr>
       <td><span class="rank-badge rank-${rank+1}">${rank+1}</span></td>
       <td class="team-name-cell" style="color:${TEAM_COLORS[s.idx]}">${s.name}</td>
       <td class="stat-neutral">${s.played}</td>
       <td class="stat-win">${s.wins}</td>
       <td class="stat-loss">${s.losses}</td>
-      <td class="stat-win">${s.mapWins}</td>
-      <td class="stat-loss">${s.mapLosses}</td>
-      <td class="${diff>0?'stat-win':diff<0?'stat-loss':'stat-neutral'}">${diff>0?'+'+diff:diff}</td>
+      <td style="color:#ffd700;font-family:'Orbitron',monospace;font-weight:900">${s.points}</td>
     </tr>`;
   }).join('');
 }
@@ -687,15 +684,18 @@ function renderHistory(t, showAll) {
     const timeStr = d.toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
     return `<div class="match-card">
       <div class="match-meta">
-        <div class="match-team ${winner===m.team1?'match-winner':'match-loser'}" style="color:${winner===m.team1?TEAM_COLORS[m.team1]:'var(--text-dim)'}">${t1}</div>
+        <div class="match-team" style="color:${TEAM_COLORS[m.team1]}">${t1}</div>
         <div style="margin-top:4px;font-size:10px;letter-spacing:1px;color:var(--text-dim)">${m.map}: <b style="color:var(--text)">${m.score1}–${m.score2}</b></div>
         <div style="margin-top:3px;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;color:var(--text-dim)">${dateStr} · ${timeStr}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div class="match-score-block" style="color:${winner===m.team1?'#00ff88':'#ff3c5f'};font-size:20px;letter-spacing:3px;min-width:48px;text-align:center">${winner===m.team1?'W':'L'}</div>
-        <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim)">${m.score1}:${m.score2}</div>
+        <div class="match-score-block" style="font-size:18px;letter-spacing:3px;min-width:64px;text-align:center;padding:6px 12px;">
+          <span style="color:${m.score1>m.score2?'#00ff88':'#ff3c5f'}">${m.score1}</span>
+          <span style="color:var(--text-dim);font-size:14px"> : </span>
+          <span style="color:${m.score2>m.score1?'#00ff88':'#ff3c5f'}">${m.score2}</span>
+        </div>
       </div>
-      <div class="match-team ${winner===m.team2?'match-winner':'match-loser'}" style="color:${winner===m.team2?TEAM_COLORS[m.team2]:'var(--text-dim)'};text-align:right">${t2}</div>
+      <div class="match-team" style="color:${TEAM_COLORS[m.team2]};text-align:right">${t2}</div>
       <div class="delete-wrap" id="del-${m.id}">
         <button class="delete-match" onclick="confirmDelete('${m.id}')" title="Smazat">✕</button>
         <div id="delconfirm-${m.id}" style="display:none;align-items:center;gap:6px;">
