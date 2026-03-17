@@ -1177,7 +1177,7 @@ function renderPlayoffBracket(t) {
     </div>` : '';
 
   document.getElementById('playoffBracket').innerHTML = `
-  <div style="display:grid;grid-template-columns:1fr 20px 1fr ${allDone?'20px 1fr':''};gap:0;align-items:start;overflow-x:auto;">
+  <div style="display:grid;grid-template-columns:1fr 20px 1fr;gap:0;align-items:start;overflow-x:auto;margin-bottom:${allDone?'16px':'0'}">
 
     <!-- SEMIFINALE -->
     <div>
@@ -1206,17 +1206,30 @@ function renderPlayoffBracket(t) {
         ${thirdTeam ? `<div style="margin-top:8px;background:rgba(205,127,50,0.08);border:1px solid rgba(205,127,50,0.3);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;"><span style="font-size:14px">🥉</span><span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#cd7f32">${thirdTeam}</span></div>` : ''}
       </div>
     </div>
+  </div>
 
-    ${allDone ? `
-    <!-- CONNECTOR 2 -->
-    <div style="display:flex;align-items:center;padding-top:30px;">
-      <div style="width:20px;height:1px;background:var(--border)"></div>
+  ${allDone ? `
+  <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+    <div class="bracket-round-title" style="color:#ffd700;margin-bottom:12px">VYSLEDKY</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;">
+      <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px">🥇</span>
+        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#ffd700">${winnerTeam}</span>
+      </div>
+      <div style="background:rgba(192,192,192,0.06);border:1px solid rgba(192,192,192,0.2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px">🥈</span>
+        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#c0c0c0">${runnerTeam}</span>
+      </div>
+      <div style="background:rgba(205,127,50,0.06);border:1px solid rgba(205,127,50,0.2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px">🥉</span>
+        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#cd7f32">${thirdTeam}</span>
+      </div>
+      <div style="background:rgba(74,96,128,0.06);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'Orbitron',monospace;font-size:13px;color:var(--text-dim);min-width:20px">4.</span>
+        <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:var(--text-dim)">${fourthTeam}</span>
+      </div>
     </div>
-
-    <!-- VYSLEDKY -->
-    ${finalStandings}` : ''}
-
-  </div>`;
+  </div>` : ''}`;
 }
 
 function renderPlayoffHistory(t) {
