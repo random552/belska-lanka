@@ -1147,8 +1147,43 @@ function renderPlayoffBracket(t) {
     </div>`;
   }
   const active = selectedPlayoffMatch;
-  const winnerTeam = p.final?.done ? tn(p.final.mapsA>=2?p.final.teamA:p.final.teamB) : null;
-  const thirdTeam  = p.third?.done ? tn(p.third.mapsA>=2?p.third.teamA:p.third.teamB) : null;
+  const winnerTeam  = p.final?.done ? tn(p.final.mapsA>=2?p.final.teamA:p.final.teamB) : null;
+  const runnerTeam  = p.final?.done ? tn(p.final.mapsA>=2?p.final.teamB:p.final.teamA) : null;
+  const thirdTeam   = p.third?.done ? tn(p.third.mapsA>=2?p.third.teamA:p.third.teamB) : null;
+  const fourthTeam  = p.third?.done ? tn(p.third.mapsA>=2?p.third.teamB:p.third.teamA) : null;
+  const winnerColor = p.final?.done ? tc(p.final.mapsA>=2?p.final.teamA:p.final.teamB) : '#ffd700';
+  const runnerColor = p.final?.done ? tc(p.final.mapsA>=2?p.final.teamB:p.final.teamA) : 'var(--text-dim)';
+  const thirdColor  = p.third?.done ? tc(p.third.mapsA>=2?p.third.teamA:p.third.teamB) : 'var(--text-dim)';
+  const fourthColor = p.third?.done ? tc(p.third.mapsA>=2?p.third.teamB:p.third.teamA) : 'var(--text-dim)';
+
+  const allDone = p.final?.done && p.third?.done;
+
+  const finalStandings = allDone ? `
+    <div style="display:flex;flex-direction:column;justify-content:flex-start;padding:0 8px;">
+      <div class="bracket-line" style="display:none"></div>
+    </div>
+    <div class="bracket-round" style="justify-content:flex-start;min-width:180px;">
+      <div class="bracket-round-title" style="color:#ffd700;margin-bottom:16px;">VYSLEDKY</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'Orbitron',monospace;font-size:18px">🥇</span>
+          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#ffd700">${winnerTeam}</span>
+        </div>
+        <div style="background:rgba(192,192,192,0.06);border:1px solid rgba(192,192,192,0.2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'Orbitron',monospace;font-size:18px">🥈</span>
+          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#c0c0c0">${runnerTeam}</span>
+        </div>
+        <div style="background:rgba(205,127,50,0.06);border:1px solid rgba(205,127,50,0.2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'Orbitron',monospace;font-size:18px">🥉</span>
+          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#cd7f32">${thirdTeam}</span>
+        </div>
+        <div style="background:rgba(74,96,128,0.06);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'Orbitron',monospace;font-size:14px;color:var(--text-dim);min-width:26px;text-align:center">4.</span>
+          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--text-dim)">${fourthTeam}</span>
+        </div>
+      </div>
+    </div>` : '';
+
   document.getElementById('playoffBracket').innerHTML = `
   <div class="bracket-wrap">
     <div class="bracket-round">
@@ -1173,6 +1208,7 @@ function renderPlayoffBracket(t) {
         ${thirdTeam ? `<div style="margin-top:8px;background:rgba(205,127,50,0.08);border:1px solid rgba(205,127,50,0.3);border-radius:6px;padding:8px;text-align:center"><div style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#cd7f32">&#129349; ${thirdTeam}</div></div>` : ''}
       </div>
     </div>
+    ${finalStandings}
   </div>`;
 }
 
