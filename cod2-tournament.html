@@ -1151,64 +1151,71 @@ function renderPlayoffBracket(t) {
   const runnerTeam  = p.final?.done ? tn(p.final.mapsA>=2?p.final.teamB:p.final.teamA) : null;
   const thirdTeam   = p.third?.done ? tn(p.third.mapsA>=2?p.third.teamA:p.third.teamB) : null;
   const fourthTeam  = p.third?.done ? tn(p.third.mapsA>=2?p.third.teamB:p.third.teamA) : null;
-  const winnerColor = p.final?.done ? tc(p.final.mapsA>=2?p.final.teamA:p.final.teamB) : '#ffd700';
-  const runnerColor = p.final?.done ? tc(p.final.mapsA>=2?p.final.teamB:p.final.teamA) : 'var(--text-dim)';
-  const thirdColor  = p.third?.done ? tc(p.third.mapsA>=2?p.third.teamA:p.third.teamB) : 'var(--text-dim)';
-  const fourthColor = p.third?.done ? tc(p.third.mapsA>=2?p.third.teamB:p.third.teamA) : 'var(--text-dim)';
-
   const allDone = p.final?.done && p.third?.done;
 
   const finalStandings = allDone ? `
-    <div style="display:flex;flex-direction:column;justify-content:flex-start;padding:0 8px;">
-      <div class="bracket-line" style="display:none"></div>
-    </div>
-    <div class="bracket-round" style="justify-content:flex-start;min-width:180px;">
-      <div class="bracket-round-title" style="color:#ffd700;margin-bottom:16px;">VYSLEDKY</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
+    <div class="bracket-round" style="min-width:160px;">
+      <div class="bracket-round-title" style="color:#ffd700;">VYSLEDKY</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
         <div style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-          <span style="font-family:'Orbitron',monospace;font-size:18px">🥇</span>
-          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#ffd700">${winnerTeam}</span>
+          <span style="font-size:16px">🥇</span>
+          <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#ffd700">${winnerTeam}</span>
         </div>
         <div style="background:rgba(192,192,192,0.06);border:1px solid rgba(192,192,192,0.2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-          <span style="font-family:'Orbitron',monospace;font-size:18px">🥈</span>
-          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#c0c0c0">${runnerTeam}</span>
+          <span style="font-size:16px">🥈</span>
+          <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#c0c0c0">${runnerTeam}</span>
         </div>
         <div style="background:rgba(205,127,50,0.06);border:1px solid rgba(205,127,50,0.2);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-          <span style="font-family:'Orbitron',monospace;font-size:18px">🥉</span>
-          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#cd7f32">${thirdTeam}</span>
+          <span style="font-size:16px">🥉</span>
+          <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#cd7f32">${thirdTeam}</span>
         </div>
         <div style="background:rgba(74,96,128,0.06);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
-          <span style="font-family:'Orbitron',monospace;font-size:14px;color:var(--text-dim);min-width:26px;text-align:center">4.</span>
-          <span style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:var(--text-dim)">${fourthTeam}</span>
+          <span style="font-family:'Orbitron',monospace;font-size:13px;color:var(--text-dim);min-width:20px">4.</span>
+          <span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:var(--text-dim)">${fourthTeam}</span>
         </div>
       </div>
     </div>` : '';
 
   document.getElementById('playoffBracket').innerHTML = `
-  <div class="bracket-wrap">
-    <div class="bracket-round">
-      <div class="bracket-round-title">SEMIFINALE</div>
+  <div style="display:grid;grid-template-columns:1fr 20px 1fr ${allDone?'20px 1fr':''};gap:0;align-items:start;overflow-x:auto;">
+
+    <!-- SEMIFINALE -->
+    <div>
+      <div class="bracket-round-title" style="margin-bottom:12px">SEMIFINALE</div>
       <div style="margin-bottom:6px;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;color:var(--accent)">SF 1</div>
       ${matchCard(p.sf1, active==='sf1')}
-      <div style="margin-top:14px;margin-bottom:6px;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;color:var(--accent)">SF 2</div>
+      <div style="margin-top:12px;margin-bottom:6px;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;color:var(--accent)">SF 2</div>
       ${matchCard(p.sf2, active==='sf2')}
     </div>
-    <div style="display:flex;flex-direction:column;justify-content:space-around;padding:40px 8px;">
-      <div style="width:24px;height:2px;background:var(--border)"></div>
-      <div style="width:2px;align-self:center;flex:1;background:var(--border);margin:4px 11px"></div>
-      <div style="width:24px;height:2px;background:var(--border)"></div>
+
+    <!-- CONNECTOR -->
+    <div style="display:flex;flex-direction:column;align-items:center;padding-top:60px;height:100%;">
+      <div style="flex:1;width:1px;background:var(--border)"></div>
+      <div style="width:20px;height:1px;background:var(--border)"></div>
+      <div style="flex:1;width:1px;background:var(--border)"></div>
     </div>
-    <div class="bracket-round">
-      <div class="bracket-round-title" style="color:#ffd700">FINALE</div>
+
+    <!-- FINALE + O 3. MISTO -->
+    <div>
+      <div class="bracket-round-title" style="color:#ffd700;margin-bottom:12px">FINALE</div>
       ${matchCard(p.final, active==='final')}
-      ${winnerTeam ? `<div style="margin-top:10px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:10px;text-align:center"><div style="font-size:16px">&#127942;</div><div style="font-family:'Orbitron',monospace;font-size:12px;font-weight:900;color:#ffd700;margin-top:4px">${winnerTeam}</div></div>` : ''}
-      <div style="margin-top:18px">
-        <div class="bracket-round-title" style="color:var(--accent2)">O 3. MISTO</div>
+      ${winnerTeam ? `<div style="margin-top:8px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;"><span style="font-size:14px">🏆</span><span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#ffd700">${winnerTeam}</span></div>` : ''}
+      <div style="margin-top:16px">
+        <div class="bracket-round-title" style="color:var(--accent2);margin-bottom:8px">O 3. MISTO</div>
         ${matchCard(p.third, active==='third')}
-        ${thirdTeam ? `<div style="margin-top:8px;background:rgba(205,127,50,0.08);border:1px solid rgba(205,127,50,0.3);border-radius:6px;padding:8px;text-align:center"><div style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#cd7f32">&#129349; ${thirdTeam}</div></div>` : ''}
+        ${thirdTeam ? `<div style="margin-top:8px;background:rgba(205,127,50,0.08);border:1px solid rgba(205,127,50,0.3);border-radius:6px;padding:8px 12px;display:flex;align-items:center;gap:8px;"><span style="font-size:14px">🥉</span><span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:900;color:#cd7f32">${thirdTeam}</span></div>` : ''}
       </div>
     </div>
-    ${finalStandings}
+
+    ${allDone ? `
+    <!-- CONNECTOR 2 -->
+    <div style="display:flex;align-items:center;padding-top:30px;">
+      <div style="width:20px;height:1px;background:var(--border)"></div>
+    </div>
+
+    <!-- VYSLEDKY -->
+    ${finalStandings}` : ''}
+
   </div>`;
 }
 
