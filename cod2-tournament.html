@@ -1072,7 +1072,7 @@ window.resetPlayoffForm = () => {
 window.submitPlayoffMap = async () => {
   if (!isEditor) { showToast('POUZE NAHLIZENNI'); return; }
   const t = allTournaments[currentId];
-  if (!t?.playoff) return;
+  if (!t?.playoff) { showToast('CHYBA: ZADNY PLAYOFF'); return; }
   const p = JSON.parse(JSON.stringify(t.playoff));
   const matchKey = selectedPlayoffMatch;
   const match = p[matchKey];
@@ -1081,7 +1081,14 @@ window.submitPlayoffMap = async () => {
   const s2 = parseInt(document.getElementById('playoffScore2').value) || 0;
   if (s1 === 0 && s2 === 0) { showToast('CHYBA: ZADEJ SKORE'); return; }
   if (s1 === s2) { showToast('CHYBA: REMIZA V PLAYOFF NENI MOZNA'); return; }
-  match.maps.push({ map: document.getElementById('playoffMapSelect').value, score1: s1, score2: s2, timestamp: Date.now() });
+
+  // Firebase converts arrays to objects — normalize to array
+  const mapsArr = match.maps
+    ? (Array.isArray(match.maps) ? match.maps : Object.values(match.maps))
+    : [];
+  mapsArr.push({ map: document.getElementById('playoffMapSelect').value, score1: s1, score2: s2, timestamp: Date.now() });
+  match.maps = mapsArr;
+
   if (s1 > s2) match.mapsA++;
   else if (s2 > s1) match.mapsB++;
   if (match.mapsA >= 2 || match.mapsB >= 2) {
@@ -1115,7 +1122,9 @@ function renderPlayoffBracket(t) {
   function tn(idx) { return (idx !== null && idx !== undefined) ? (teams[idx]||'?') : 'TBD'; }
   function tc(idx) { return (idx !== null && idx !== undefined) ? TEAM_COLORS[idx] : 'var(--text-dim)'; }
   function matchCard(match, isActive) {
-    const maps = match.maps || [];
+    const maps = match.maps
+      ? (Array.isArray(match.maps) ? match.maps : Object.values(match.maps))
+      : [];
     const mapsHtml = maps.length > 0
       ? `<div class="bracket-match-maps">${maps.map(m =>
           `<span class="bracket-map-tag">${m.map} <b style="color:${m.score1>m.score2?'#00ff88':m.score2>m.score1?'#ff3c5f':'var(--text)'}">${m.score1}</b>:<b style="color:${m.score2>m.score1?'#00ff88':m.score1>m.score2?'#ff3c5f':'var(--text)'}">${m.score2}</b></span>`
@@ -1175,7 +1184,9 @@ function renderPlayoffHistory(t) {
   let html = '';
   for (const key of matchOrder) {
     const match = p[key];
-    if (!match || !match.maps || match.maps.length === 0) continue;
+    if (!match || !match.maps) continue;
+    const matchMaps = Array.isArray(match.maps) ? match.maps : Object.values(match.maps);
+    if (matchMaps.length === 0) continue;
     const t1 = match.teamA !== null ? (teams[match.teamA]||'?') : '?';
     const t2 = match.teamB !== null ? (teams[match.teamB]||'?') : '?';
     const c1 = match.teamA !== null ? TEAM_COLORS[match.teamA] : 'var(--text-dim)';
@@ -1186,7 +1197,7 @@ function renderPlayoffHistory(t) {
     html += `<div style="margin-bottom:16px;">
       <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--accent);margin-bottom:8px">${matchLabels[key]}</div>`;
 
-    for (const m of match.maps) {
+    for (const m of matchMaps) {
       const d = new Date(m.timestamp);
       const dateStr = d.toLocaleDateString('cs-CZ',{day:'2-digit',month:'2-digit',year:'numeric'});
       const timeStr = d.toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
