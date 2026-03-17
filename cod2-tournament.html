@@ -1075,6 +1075,16 @@ window.submitPlayoffMap = async () => {
   if (!t?.playoff) { showToast('CHYBA: ZADNY PLAYOFF'); return; }
   const p = JSON.parse(JSON.stringify(t.playoff));
   const matchKey = selectedPlayoffMatch;
+
+  // normalize all match objects — Firebase may strip empty arrays/missing fields
+  ['sf1','sf2','final','third'].forEach(k => {
+    if (!p[k]) p[k] = { teamA: null, teamB: null, mapsA: 0, mapsB: 0, maps: [], done: false };
+    p[k].maps = p[k].maps ? (Array.isArray(p[k].maps) ? p[k].maps : Object.values(p[k].maps)) : [];
+    p[k].mapsA = p[k].mapsA || 0;
+    p[k].mapsB = p[k].mapsB || 0;
+    p[k].done = p[k].done || false;
+  });
+
   const match = p[matchKey];
   if (!match || match.done) { showToast('ZAPAS JIZ SKONCIL'); return; }
   const s1 = parseInt(document.getElementById('playoffScore1').value) || 0;
@@ -1082,12 +1092,7 @@ window.submitPlayoffMap = async () => {
   if (s1 === 0 && s2 === 0) { showToast('CHYBA: ZADEJ SKORE'); return; }
   if (s1 === s2) { showToast('CHYBA: REMIZA V PLAYOFF NENI MOZNA'); return; }
 
-  // Firebase converts arrays to objects — normalize to array
-  const mapsArr = match.maps
-    ? (Array.isArray(match.maps) ? match.maps : Object.values(match.maps))
-    : [];
-  mapsArr.push({ map: document.getElementById('playoffMapSelect').value, score1: s1, score2: s2, timestamp: Date.now() });
-  match.maps = mapsArr;
+  match.maps.push({ map: document.getElementById('playoffMapSelect').value, score1: s1, score2: s2, timestamp: Date.now() });
 
   if (s1 > s2) match.mapsA++;
   else if (s2 > s1) match.mapsB++;
