@@ -9,7 +9,7 @@
   :root {
     --bg: #050810; --surface: #0a0f1e; --surface2: #0f1628;
     --border: #1a2a4a; --accent: #00d4ff; --accent2: #ff3c5f;
-    --text: #c8d8f0; --text-dim: #4a6080;
+    --text: #e8f0ff; --text-dim: #8aa0c0;
     --glow: 0 0 20px rgba(0,212,255,0.3); --glow2: 0 0 20px rgba(255,60,95,0.3);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -239,7 +239,6 @@
 <body>
 <div class="container">
   <header>
-    <div class="logo-tag"> </div>
     <div class="h1-wrap">
       <h1>BPB LAN</h1>
       <div class="h1-beam"></div>
@@ -458,7 +457,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const db = getDatabase(firebaseApp);
 
 const EDITOR_KEY = 'Bela552';
-const TEAM_COLORS = ['#00d4ff','#ff9500','#7b2fff','#f0e040'];
+const TEAM_COLORS = ['#00d4ff','#ff9500','#ff4db8','#f0e040'];
 const params = new URLSearchParams(window.location.search);
 const isEditor = params.get('key') === EDITOR_KEY;
 const directId = params.get('t');
@@ -976,7 +975,7 @@ function renderMapKings(t) {
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;position:relative;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='${color}44'" onmouseout="this.style.borderColor=''">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};opacity:0.6"></div>
         <div style="font-family:'Poppins',sans-serif;font-size:9px;letter-spacing:3px;color:var(--text-dim);margin-bottom:8px">${mapName}</div>
-        <div style="font-family:'Poppins',sans-serif;font-size:14px;font-weight:900;color:${color};margin-bottom:4px">${tied?'REMIZA':'👑 '+teams[topIdx]}</div>
+        <div style="font-family:'Poppins',sans-serif;font-size:14px;font-weight:900;color:${tied?'#ffffff':color};margin-bottom:4px">${tied?'REMIZA':'👑 '+teams[topIdx]}</div>
         <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">${topWins} / ${total} vitezstvi</div>
       </div>`;
     }).join('') + `</div>`;
