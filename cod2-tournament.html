@@ -101,6 +101,7 @@
 
   .screen { display:none; }
   .screen.active { display:block; }
+  #listScreen { margin: -20px; padding: 0; }
 
   /* TOURNAMENT LIST */
   .tournament-card {
@@ -210,6 +211,9 @@
     .bracket-team { font-size:9px; padding:6px 8px; }
   }
 
+  .guide-item { transition: border-color 0.2s, background 0.2s; cursor:pointer; }
+  .guide-item:hover { border-color: var(--accent) !important; }
+  .guide-color-item:hover { border-color: var(--item-color, var(--accent)) !important; }
   .btn-success { background:rgba(0,255,136,0.1); border-color:#00ff88; color:#00ff88; }
   .btn-success:hover { background:rgba(0,255,136,0.2); box-shadow:0 0 20px rgba(0,255,136,0.3); }
 
@@ -238,9 +242,9 @@
 </head>
 <body>
 <div class="container">
-  <header>
+  <header style="position:relative;z-index:10;">
     <div class="h1-wrap">
-      <h1>BPB LAN</h1>
+      <h1 style="filter:drop-shadow(0 0 18px rgba(0,212,255,0.6)) drop-shadow(0 2px 8px rgba(0,0,0,0.9));">BPB LAN</h1>
       <div class="h1-beam"></div>
     </div>
     <div class="header-meta">
@@ -256,29 +260,47 @@
   </div>
 
   <!-- TOURNAMENT LIST -->
-  <div class="screen" id="listScreen">
-    <div class="section">
-      <div class="section-title">Turnaje</div>
-      <div id="tournamentList"></div>
-      <div class="btn-row" id="newTournamentBtn" style="display:none">
-        <button class="btn btn-primary" onclick="showNewTournamentForm()">+ NOVY TURNAJ</button>
+  <div class="screen" id="listScreen" style="position:relative;min-height:100vh;">
+
+    <!-- VIDEO BACKGROUND -->
+    <div id="bgVideoWrap" style="position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;">
+      <video id="bgVideo" autoplay muted playsinline
+        style="width:100%;height:100%;object-fit:cover;opacity:0.55;">
+        <source src="https://raw.githubusercontent.com/random552/belska-lanka/main/uvod.mp4" type="video/mp4">
+      </video>
+      <!-- dark center overlay so content is readable -->
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse 55% 100% at 50% 50%, rgba(5,8,16,0.88) 0%, rgba(5,8,16,0.3) 100%);"></div>
+      <!-- side fades to blend soldiers -->
+      <div style="position:absolute;inset:0;background:linear-gradient(to right, rgba(5,8,16,0) 0%, rgba(5,8,16,0) 30%, rgba(5,8,16,0) 70%, rgba(5,8,16,0) 100%);"></div>
+    </div>
+
+    <!-- CONTENT CENTERED BETWEEN SOLDIERS -->
+    <div style="position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:20px;">
+      <div style="width:100%;max-width:520px;">
+        <div class="section" style="background:rgba(5,8,16,0.82);backdrop-filter:blur(10px);border-color:rgba(100,120,80,0.4);">
+          <div class="section-title" style="color:#8fa870;">Turnaje</div>
+          <div id="tournamentList"></div>
+          <div class="btn-row" id="newTournamentBtn" style="display:none">
+            <button class="btn btn-primary" onclick="showNewTournamentForm()">+ NOVY TURNAJ</button>
+          </div>
+        </div>
+        <div class="section" id="newTournamentForm" style="display:none;background:rgba(5,8,16,0.82);backdrop-filter:blur(10px);border-color:rgba(100,120,80,0.4);">
+          <div class="section-title" style="color:#8fa870;">Novy turnaj</div>
+          <div style="margin-bottom:16px">
+            <div class="map-label">Nazev turnaje</div>
+            <input type="text" id="newTournamentName" placeholder="napr. BPB LAN #3">
+          </div>
+          <div class="teams-grid" id="newTeamInputs"></div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="createTournament()">VYTVORIT</button>
+            <button class="btn btn-ghost" onclick="hideNewTournamentForm()">ZRUSIT</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="section" id="newTournamentForm" style="display:none">
-      <div class="section-title">Novy turnaj</div>
-      <div style="margin-bottom:16px">
-        <div class="map-label">Nazev turnaje</div>
-        <input type="text" id="newTournamentName" placeholder="napr. Belska Lanka #3">
-      </div>
-      <div class="teams-grid" id="newTeamInputs"></div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="createTournament()">VYTVORIT</button>
-        <button class="btn btn-ghost" onclick="hideNewTournamentForm()">ZRUSIT</button>
       </div>
     </div>
   </div>
-
-  <!-- TOURNAMENT VIEW -->
   <div class="screen" id="tournamentScreen">
     <button class="back-btn" onclick="goBack()">&#8592; VSECHNY TURNAJE</button>
     <div id="closedBanner" class="closed-banner" style="display:none">TURNAJ UZAVREN &mdash; POUZE ARCHIV</div>
@@ -354,6 +376,8 @@
         <button class="btn btn-success" id="startPlayoffBtn" onclick="startPlayoff()" style="display:none">&#9654; ZAHAJIT PLAYOFF</button>
         <button class="btn btn-danger" onclick="closeTournament()">UZAVRIT TURNAJ</button>
         <button class="btn btn-ghost" onclick="exportData()">&#8593; EXPORT JSON</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importJsonFile').click()">&#8595; IMPORT JSON</button>
+        <input type="file" id="importJsonFile" accept=".json" style="display:none" onchange="importData(event)">
         <button class="btn btn-danger" onclick="deleteTournament()" style="margin-left:auto">&#128465; SMAZAT TURNAJ</button>
       </div>
     </div>
@@ -436,26 +460,61 @@
   </div>
 </div>
 
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB2uv91ajj0xk4V-V11RU5rD6XZnAqo_xQ",
-  authDomain: "belska-lanka.firebaseapp.com",
-  databaseURL: "https://belska-lanka-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "belska-lanka",
-  storageBucket: "belska-lanka.firebasestorage.app",
-  messagingSenderId: "558844523303",
-  appId: "1:558844523303:web:2bed2dbd4733e27bb6af02"
+<script>
+// ── OFFLINE localStorage SHIM (Firebase API kompatibilni) ─────────
+const _db = {
+  _data: JSON.parse(localStorage.getItem('bpb_db') || '{}'),
+  _listeners: {},
+  _save() { localStorage.setItem('bpb_db', JSON.stringify(this._data)); },
+  _get(path) {
+    return path.split('/').filter(Boolean).reduce((o,k) => (o&&o[k]!==undefined?o[k]:null), this._data);
+  },
+  _set(path, val) {
+    const keys = path.split('/').filter(Boolean);
+    let o = this._data;
+    for (let i = 0; i < keys.length-1; i++) { if (!o[keys[i]]) o[keys[i]]= {}; o=o[keys[i]]; }
+    o[keys[keys.length-1]] = val;
+    this._save();
+    this._notify(path);
+  },
+  _notify(path) {
+    const top = path.split('/').filter(Boolean)[0];
+    Object.keys(this._listeners).forEach(k => {
+      if (k === top || path.startsWith(k)) {
+        const val = this._get(k);
+        this._listeners[k]({ val: () => val });
+      }
+    });
+  }
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
+function ref(db, path) { return { path }; }
+function onValue(r, cb) {
+  const key = r.path.split('/').filter(Boolean)[0];
+  _db._listeners[key] = cb;
+  cb({ val: () => _db._get(r.path) });
+}
+function set(r, val) { _db._set(r.path, val); return Promise.resolve(); }
+function update(r, val) {
+  const cur = _db._get(r.path) || {};
+  _db._set(r.path, {...cur, ...val});
+  return Promise.resolve();
+}
+function remove(r) { _db._set(r.path, null); return Promise.resolve(); }
+function push(r, val) {
+  const id = 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  const path = r.path + '/' + id;
+  if (val !== undefined) _db._set(path, val);
+  return { key: id, path };
+}
+function getDatabase() { return _db; }
+const db = _db;
 
+// ─────────────────────────────────────────────────────────────────
 const EDITOR_KEY = 'Bela552';
 const TEAM_COLORS = ['#00d4ff','#ff9500','#ff4db8','#f0e040'];
 const params = new URLSearchParams(window.location.search);
@@ -478,6 +537,9 @@ if (isEditor) {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // show video only on list screen
+  const vid = document.getElementById('bgVideoWrap');
+  if (vid) vid.style.display = id === 'listScreen' ? '' : 'none';
 }
 
 function showToast(msg) {
@@ -783,6 +845,28 @@ window.exportData = () => {
   showToast('EXPORTOVANO');
 };
 
+window.importData = (event) => {
+  if (!isEditor) { showToast('POUZE NAHLIZENNI'); return; }
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.teams || !data.matches) { showToast('CHYBA: Neplatny soubor'); return; }
+      // import as new tournament
+      const id = 'id_' + Date.now();
+      _db._set('tournaments/' + id, data);
+      showToast('TURNAJ IMPORTOVAN');
+      goBack();
+    } catch {
+      showToast('CHYBA: Neplatny JSON');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+};
+
 // ── STANDINGS ─────────────────────────────────────────────────────
 function getMatches(t) {
   return Object.entries(t.matches||{}).map(([id,m]) => ({...m, id}));
@@ -957,26 +1041,29 @@ function renderMapKings(t) {
   const teams = t.teams||[];
   const matches = getMatches(t);
   if (matches.length===0) { wrap.innerHTML='<div class="empty-state">// ZADNA DATA</div>'; return; }
+
+  // count total rounds per team per map
   const mapData = {};
   for (const m of matches) {
-    if (!mapData[m.map]) mapData[m.map]={};
-    const w = m.score1>m.score2 ? m.team1 : m.team2;
-    mapData[m.map][w] = (mapData[m.map][w]||0)+1;
+    if (!mapData[m.map]) mapData[m.map] = {};
+    mapData[m.map][m.team1] = (mapData[m.map][m.team1]||0) + m.score1;
+    mapData[m.map][m.team2] = (mapData[m.map][m.team2]||0) + m.score2;
   }
+
   const maps = Object.keys(mapData).sort();
   wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:4px;">` +
     maps.map(mapName => {
-      const wins = mapData[mapName];
-      const topIdx = Object.keys(wins).reduce((a,b)=>wins[a]>wins[b]?a:b);
-      const topWins = wins[topIdx];
-      const total = Object.values(wins).reduce((a,b)=>a+b,0);
-      const tied = Object.values(wins).filter(v=>v===topWins).length>1;
+      const rounds = mapData[mapName];
+      const topIdx = Object.keys(rounds).reduce((a,b)=>rounds[a]>rounds[b]?a:b);
+      const topRounds = rounds[topIdx];
+      const total = Object.values(rounds).reduce((a,b)=>a+b,0);
+      const tied = Object.values(rounds).filter(v=>v===topRounds).length>1;
       const color = TEAM_COLORS[topIdx];
       return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;position:relative;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='${color}44'" onmouseout="this.style.borderColor=''">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};opacity:0.6"></div>
         <div style="font-family:'Poppins',sans-serif;font-size:9px;letter-spacing:3px;color:var(--text-dim);margin-bottom:8px">${mapName}</div>
         <div style="font-family:'Poppins',sans-serif;font-size:14px;font-weight:900;color:${tied?'#ffffff':color};margin-bottom:4px">${tied?'REMIZA':'👑 '+teams[topIdx]}</div>
-        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">${topWins} / ${total} vitezstvi</div>
+        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">${topRounds} / ${total} kol</div>
       </div>`;
     }).join('') + `</div>`;
 }
@@ -1330,6 +1417,16 @@ function renderPlayoffHistory(t) {
   histSection.style.display = '';
   wrap.innerHTML = html;
 }
+
+
+// ── VIDEO SPEED ───────────────────────────────────────────────────
+(function() {
+  const video = document.getElementById('bgVideo');
+  if (!video) return;
+  video.addEventListener('loadedmetadata', () => {
+    video.playbackRate = 0.33;
+  });
+})();
 
 document.addEventListener('mousemove', (e) => {
   const tooltip = document.querySelector('.team-name-cell:hover .player-tooltip');
