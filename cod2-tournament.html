@@ -464,57 +464,23 @@
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script>
-// ── OFFLINE localStorage SHIM (Firebase API kompatibilni) ─────────
-const _db = {
-  _data: JSON.parse(localStorage.getItem('bpb_db') || '{}'),
-  _listeners: {},
-  _save() { localStorage.setItem('bpb_db', JSON.stringify(this._data)); },
-  _get(path) {
-    return path.split('/').filter(Boolean).reduce((o,k) => (o&&o[k]!==undefined?o[k]:null), this._data);
-  },
-  _set(path, val) {
-    const keys = path.split('/').filter(Boolean);
-    let o = this._data;
-    for (let i = 0; i < keys.length-1; i++) { if (!o[keys[i]]) o[keys[i]]= {}; o=o[keys[i]]; }
-    o[keys[keys.length-1]] = val;
-    this._save();
-    this._notify(path);
-  },
-  _notify(path) {
-    const top = path.split('/').filter(Boolean)[0];
-    Object.keys(this._listeners).forEach(k => {
-      if (k === top || path.startsWith(k)) {
-        const val = this._get(k);
-        this._listeners[k]({ val: () => val });
-      }
-    });
-  }
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB2uv91ajj0xk4V-V11RU5rD6XZnAqo_xQ",
+  authDomain: "belska-lanka.firebaseapp.com",
+  databaseURL: "https://belska-lanka-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "belska-lanka",
+  storageBucket: "belska-lanka.firebasestorage.app",
+  messagingSenderId: "558844523303",
+  appId: "1:558844523303:web:2bed2dbd4733e27bb6af02"
 };
 
-function ref(db, path) { return { path }; }
-function onValue(r, cb) {
-  const key = r.path.split('/').filter(Boolean)[0];
-  _db._listeners[key] = cb;
-  cb({ val: () => _db._get(r.path) });
-}
-function set(r, val) { _db._set(r.path, val); return Promise.resolve(); }
-function update(r, val) {
-  const cur = _db._get(r.path) || {};
-  _db._set(r.path, {...cur, ...val});
-  return Promise.resolve();
-}
-function remove(r) { _db._set(r.path, null); return Promise.resolve(); }
-function push(r, val) {
-  const id = 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-  const path = r.path + '/' + id;
-  if (val !== undefined) _db._set(path, val);
-  return { key: id, path };
-}
-function getDatabase() { return _db; }
-const db = _db;
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
 
-// ─────────────────────────────────────────────────────────────────
 const EDITOR_KEY = 'Bela552';
 const TEAM_COLORS = ['#00d4ff','#ff9500','#ff4db8','#f0e040'];
 const params = new URLSearchParams(window.location.search);
@@ -845,18 +811,17 @@ window.exportData = () => {
   showToast('EXPORTOVANO');
 };
 
-window.importData = (event) => {
+window.importData = async (event) => {
   if (!isEditor) { showToast('POUZE NAHLIZENNI'); return; }
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = async (e) => {
     try {
       const data = JSON.parse(e.target.result);
       if (!data.teams || !data.matches) { showToast('CHYBA: Neplatny soubor'); return; }
-      // import as new tournament
-      const id = 'id_' + Date.now();
-      _db._set('tournaments/' + id, data);
+      const newRef = push(ref(db, 'tournaments'));
+      await set(newRef, data);
       showToast('TURNAJ IMPORTOVAN');
       goBack();
     } catch {
