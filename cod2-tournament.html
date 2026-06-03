@@ -28,7 +28,8 @@
   }
   @keyframes gridMove { 0%{transform:translateY(0)} 100%{transform:translateY(40px)} }
 
-  .container { position:relative; z-index:1; max-width:780px; margin:0 auto; padding:20px; }
+  .container { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:20px; }
+  @media (min-width:1100px) { .container { max-width:1100px; } }
 
   header { text-align:center; padding:40px 0 24px; }
   .logo-tag { font-family:'Poppins',sans-serif; font-size:10px; letter-spacing:6px; color:var(--accent); margin-bottom:8px; opacity:0.7; }
@@ -365,7 +366,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title">Kral mapy</div>
+      <div class="section-title">Win Rate</div>
       <div id="mapKings"></div>
     </div>
 
@@ -1000,35 +1001,49 @@ function renderRoundsStats(t) {
     }).join('') + `</div>`;
 }
 
-// ── MAP KINGS ─────────────────────────────────────────────────────
+// ── WIN RATE ───────────────────────────────────────────────────────
 function renderMapKings(t) {
   const wrap = document.getElementById('mapKings');
   const teams = t.teams||[];
   const matches = getMatches(t);
   if (matches.length===0) { wrap.innerHTML='<div class="empty-state">// ZADNA DATA</div>'; return; }
 
-  // count total rounds per team per map
-  const mapData = {};
+  // count wins and total matches per team
+  const wins = {}, total = {};
+  for (let i=0; i<teams.length; i++) { wins[i]=0; total[i]=0; }
   for (const m of matches) {
-    if (!mapData[m.map]) mapData[m.map] = {};
-    mapData[m.map][m.team1] = (mapData[m.map][m.team1]||0) + m.score1;
-    mapData[m.map][m.team2] = (mapData[m.map][m.team2]||0) + m.score2;
+    total[m.team1]=(total[m.team1]||0)+1;
+    total[m.team2]=(total[m.team2]||0)+1;
+    if (m.score1>m.score2) wins[m.team1]=(wins[m.team1]||0)+1;
+    else wins[m.team2]=(wins[m.team2]||0)+1;
   }
 
-  const maps = Object.keys(mapData).sort();
-  wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:4px;">` +
-    maps.map(mapName => {
-      const rounds = mapData[mapName];
-      const topIdx = Object.keys(rounds).reduce((a,b)=>rounds[a]>rounds[b]?a:b);
-      const topRounds = rounds[topIdx];
-      const total = Object.values(rounds).reduce((a,b)=>a+b,0);
-      const tied = Object.values(rounds).filter(v=>v===topRounds).length>1;
-      const color = TEAM_COLORS[topIdx];
-      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;position:relative;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='${color}44'" onmouseout="this.style.borderColor=''">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${color};opacity:0.6"></div>
-        <div style="font-family:'Poppins',sans-serif;font-size:9px;letter-spacing:3px;color:var(--text-dim);margin-bottom:8px">${mapName}</div>
-        <div style="font-family:'Poppins',sans-serif;font-size:14px;font-weight:900;color:${tied?'#ffffff':color};margin-bottom:4px">${tied?'REMIZA':'👑 '+teams[topIdx]}</div>
-        <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px">${topRounds} / ${total} kol</div>
+  // sort by win rate descending
+  const sorted = teams.map((_,i)=>i).sort((a,b)=>{
+    const ra = total[a]?wins[a]/total[a]:0;
+    const rb = total[b]?wins[b]/total[b]:0;
+    return rb-ra;
+  });
+
+  wrap.innerHTML = `<div style="margin-top:8px;display:flex;flex-direction:column;gap:14px;">` +
+    sorted.map((i,rank) => {
+      const color = TEAM_COLORS[i];
+      const pct = total[i] ? Math.round(wins[i]/total[i]*100) : 0;
+      const label = total[i] ? `${wins[i]} / ${total[i]} zapasu` : 'zadne zapasy';
+      return `<div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:'Poppins',sans-serif;font-size:11px;color:var(--text-dim);width:16px;">${rank+1}.</span>
+            <span style="font-family:'Poppins',sans-serif;font-size:13px;font-weight:700;color:${color};letter-spacing:1px;">${teams[i]}</span>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:'Poppins',sans-serif;font-size:22px;font-weight:900;color:${color};">${pct}%</span>
+            <span style="font-size:11px;color:var(--text-dim);">${label}</span>
+          </div>
+        </div>
+        <div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;border:1px solid var(--border);">
+          <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width 0.6s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px ${color}66;"></div>
+        </div>
       </div>`;
     }).join('') + `</div>`;
 }
